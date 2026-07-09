@@ -43,7 +43,7 @@ TaskFlow es un sistema robusto de gestión de tareas desarrollado en **Django** 
 * **Backend:** Python 3.12, Django 4.2.11
 * **Frontend:** HTML5, CSS3, Bootstrap 5 (integrado vía `django-bootstrap5`).
 * **Iconografía:** Lucide Icons.
-* **Base de Datos:** SQLite / MySQL.
+* **Base de Datos:** MySQL.
 
 ## 📅 Mapa de Ruta (Próximos Pasos)
 
