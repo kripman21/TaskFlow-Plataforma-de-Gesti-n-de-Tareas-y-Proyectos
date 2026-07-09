@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-danger fw-bold">
+            <i data-lucide="trash-2" class="me-2"></i> Papelera de Reciclaje
+        </h2>
+        <p class="text-muted">Los elementos aquí pueden ser restaurados o destruidos permanentemente.</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- SECCIÓN DE TAREAS -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-danger mb-4">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Tareas Eliminadas</h5>
+                <i data-lucide="list"></i>
+            </div>
+            <div class="card-body p-0">
+                {% if tareas_borradas %}
+                <ul class="list-group list-group-flush">
+                    {% for tarea in tareas_borradas %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <div>
+                            <strong class="text-dark">{{ tarea.titulo }}</strong><br>
+                            <small class="text-muted">Proyecto: {{ tarea.proyecto.nombre }}</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <!-- Botón Restaurar (Soft Undelete) -->
+                            <form action="{% url 'restaurar_tarea' tarea.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="Restaurar">
+                                    <i data-lucide="refresh-cw"></i>
+                                </button>
+                            </form>
+                            <!-- Botón Destruir (Hard Delete) -->
+                            <form action="{% url 'destruir_tarea' tarea.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger" title="Destruir para siempre">
+                                    <i data-lucide="x-circle"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i data-lucide="inbox" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <p class="mb-0">Tu papelera de tareas está vacía.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN DE PROYECTOS (Solo visible si hay acceso) -->
+    {% if proyectos_borrados is not None %}
+    <div class="col-md-6">
+        <div class="card shadow-sm border-danger mb-4">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Proyectos Eliminados</h5>
+                <i data-lucide="folder"></i>
+            </div>
+            <div class="card-body p-0">
+                {% if proyectos_borrados %}
+                <ul class="list-group list-group-flush">
+                    {% for proyecto in proyectos_borrados %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <div>
+                            <strong class="text-dark">{{ proyecto.nombre }}</strong>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <!-- Botón Restaurar -->
+                            <form action="{% url 'restaurar_proyecto' proyecto.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="Restaurar">
+                                    <i data-lucide="refresh-cw"></i>
+                                </button>
+                            </form>
+                            <!-- Botón Destruir -->
+                            <form action="{% url 'destruir_proyecto' proyecto.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger" title="Destruir para siempre">
+                                    <i data-lucide="x-circle"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i data-lucide="inbox" class="mb-2" style="width: 32px; height: 32px;"></i>
+                    <p class="mb-0">No hay proyectos eliminados.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

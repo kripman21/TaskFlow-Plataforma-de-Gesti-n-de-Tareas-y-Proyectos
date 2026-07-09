@@ -1,0 +1,7 @@
+reportes/
+venv/
+.venv/
+*.pyc
+db.sqlite3
+__pycache__/
+.env

@@ -1,0 +1,144 @@
+{% load django_bootstrap5 %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mi Proyecto Django{% endblock %}</title>
+    <style>
+        /* Transición suave para el cambio de tamaño */
+        #sidebar {
+            transition: width 0.3s ease;
+            overflow-x: hidden;
+            /* Evita que el texto se desborde al achicar */
+        }
+
+        /* Clase que agregaremos con JavaScript */
+        .sidebar-contraida {
+            width: 80px !important;
+        }
+
+        /* Ocultar el texto de los enlaces cuando está contraída */
+        .sidebar-contraida .texto-enlace,
+        .sidebar-contraida #menuText {
+            display: none !important;
+        }
+
+        .sidebar-contraida .logo-expandido {
+            display: none !important;
+        }
+
+        .sidebar-contraida .logo-contraido {
+            display: block !important;
+        }
+
+        /* 1. Centrar los iconos de los enlaces del menú */
+        .sidebar-contraida .nav-link {
+            justify-content: center !important;
+            /* Fuerza a centrar el contenido (el icono) */
+            padding-left: 0;
+            padding-right: 0;
+            /* Opcional: quitar el gap para que el icono quede en el centro exacto */
+            gap: 0 !important;
+        }
+
+        /* 2. Centrar el botón de arriba (el de las 3 rayitas) */
+        .sidebar-contraida>div:first-child {
+            justify-content: center !important;
+        }
+    </style>
+
+    {% bootstrap_css %}
+</head>
+
+<body>
+
+    <div class="d-flex" style="height: 100vh;">
+
+        <!-- COLUMNA IZQUIERDA: La Barra Lateral (Sidebar) -->
+        <div id="sidebar" class="bg-dark text-white p-3 d-flex flex-column" style="width: 250px;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <!-- Logo -->
+                <h4 class="mb-0 text-truncate fw-bold text-white" id="menuText">TaskFlow</h4>
+                <!-- Botón con un icono de Lucide -->
+                <button id="btnToggleSidebar" class="btn btn-sm btn-outline-light border-0">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+            <ul class="nav flex-column gap-2">
+
+                <!-- Enlace al Dashboard -->
+                <li class="nav-item">
+                    <a href="{% url 'dashboard' %}" class="nav-link text-white d-flex align-items-center gap-2">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span class="texto-enlace">Dashboard</span>
+                    </a>
+                </li>
+                <!-- Enlace para Crear Proyecto -->
+                {% if es_administrador %}
+                <li class="nav-item">
+                    <a href="{% url 'crear_proyecto' %}" class="nav-link text-white d-flex align-items-center gap-2">
+                        <i data-lucide="folder-plus"></i>
+                        <span class="texto-enlace">Nuevo Proyecto</span>
+                    </a>
+                </li>
+                {% endif %}
+                <!-- Enlace para Crear Tarea -->
+                <li class="nav-item">
+                    <a href="{% url 'crear_tarea' %}" class="nav-link text-white d-flex align-items-center gap-2">
+                        <i data-lucide="list-plus"></i>
+                        <span class="texto-enlace">Nueva Tarea</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white d-flex align-items-center gap-2" href="{% url 'papelera' %}">
+                        <i data-lucide="trash-2" class="me-2"></i>
+                        <span class="texto-enlace">Papelera de Reciclaje</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="mt-auto">
+                <hr class="text-white-50"> <!-- Una línea separadora sutil -->
+
+                <!-- botón de cerrar sesión -->
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="btn btn-dark w-100 d-flex align-items-center justify-content-center gap-2">
+                        <i data-lucide="log-out"></i>
+                        <span class="texto-enlace">Cerrar Sesión</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- COLUMNA DERECHA: El Contenido Principal -->
+        <div class="flex-grow-1 p-4 bg-light">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+    {% bootstrap_javascript %}
+    <!-- Script principal de Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Script para que Lucide dibuje los iconos -->
+    <script>
+        lucide.createIcons();
+    </script>
+
+    <!-- Script para que el sidebar se contraiga y expanda -->
+    <script>
+        // 1. Seleccionamos el botón y la barra lateral
+        const btnToggle = document.getElementById('btnToggleSidebar');
+        const sidebar = document.getElementById('sidebar');
+
+        // 2. Le decimos qué hacer cuando hagan clic
+        btnToggle.addEventListener('click', function () {
+            // Toggle agrega la clase si no la tiene, y se la quita si ya la tiene
+            sidebar.classList.toggle('sidebar-contraida');
+        });
+    </script>
+</body>
+
+</html>

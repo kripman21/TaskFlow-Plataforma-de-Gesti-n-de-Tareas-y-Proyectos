@@ -1,0 +1,13 @@
+{% extends 'base_auth.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Iniciar Sesión - TaskFlow{% endblock %}
+
+{% block content %}
+<h2>Iniciar sesión en TaskFlow</h2>
+<form method="post">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    {% bootstrap_button "Iniciar Sesión" button_type="submit" button_class="btn-primary" %}
+</form>
+{% endblock %}

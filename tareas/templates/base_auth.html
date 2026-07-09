@@ -1,0 +1,25 @@
+{% load django_bootstrap5 %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TaskFlow{% endblock %}</title>
+    {% bootstrap_css %}
+</head>
+
+<body class="bg-light"> <!-- Un fondo suave para la pantalla de auth -->
+
+    <!-- Contenedor centrado para el login -->
+    <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="card shadow-sm p-4" style="width: 100%; max-width: 400px;">
+            <!-- Aquí se inyectará el formulario -->
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+    {% bootstrap_javascript %}
+</body>
+
+</html>

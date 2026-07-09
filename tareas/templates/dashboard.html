@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - TaskFlow{% endblock %}
+
+{% block content %}
+<h1>Bienvenido a TaskFlow {{usuario.username}}.</h1>
+{% if es_administrador %} <!-- Si el usuario pertenece al grupo Admin -->
+<p>Has iniciado sesión como Administrador.</p>
+{% else %} <!-- Si el usuario pertenece al grupo Usuario -->
+<p>Has iniciado sesión como Usuario. Aqui tus tareas asignadas y Proyectos</p>
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+    <h3>Mis Tareas</h3>
+    <!-- Selector de Vistas -->
+    <div class="btn-group shadow-sm" role="group" aria-label="Selector de Vistas">
+        <a href="?vista=lista" class="btn btn-outline-secondary {% if vista_actual == 'lista' %}active{% endif %}"
+            title="Vista de Lista">
+            <i data-lucide="list"></i>
+        </a>
+        <a href="?vista=grilla" class="btn btn-outline-secondary {% if vista_actual == 'grilla' %}active{% endif %}"
+            title="Vista de Grilla">
+            <i data-lucide="layout-grid"></i>
+        </a>
+        <a href="?vista=kanban" class="btn btn-outline-secondary {% if vista_actual == 'kanban' %}active{% endif %}"
+            title="Vista Kanban">
+            <i data-lucide="kanban"></i>
+        </a>
+    </div>
+</div>
+
+{% if vista_actual == 'lista' %}
+<!-- Contenedor principal de la Lista de Tarjetas Estilizadas -->
+<div class="d-flex flex-column gap-3">
+    {% for tarea in tareas %}
+    <!-- Tarjeta individual (Formato Lista) -->
+    <div class="card border-0 border-start border-4 bg-white shadow-sm p-3 position-relative transition-all"
+        style="border-left-color: {% if tarea.estado == 'terminada' %}#198754{% elif tarea.estado == 'en_progreso' %}#0d6efd{% else %}#6c757d{% endif %} !important; border-radius: 8px;">
+
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <!-- Categoría / Proyecto -->
+            <span class="badge text-uppercase tracking-wider px-2 py-1"
+                style="font-size: 11px; background-color: #d8e2ff; color: #004395; font-weight: 600; border-radius: 4px;">
+                {{ tarea.proyecto.nombre }}
+            </span>
+
+            <!-- Botones de Acción (Editar/Eliminar) -->
+            <div class="d-flex gap-1">
+                {% if es_administrador or tarea.creado_por == request.user %}
+                <a href="{% url 'editar_tarea' tarea.id %}" class="btn btn-sm btn-link text-muted p-0 me-2"
+                    title="Editar tarea">
+                    <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
+                </a>
+                <form action="{% url 'eliminar_tarea' tarea.id %}" method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-link text-danger p-0 border-0 align-top"
+                        title="Mover a papelera">
+                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        <!-- Título de la Tarea -->
+        <h5 class="mb-3">
+            <a href="{% url 'detalle_tarea' tarea.id %}" class="text-decoration-none text-dark fw-bold"
+                style="font-size: 18px;">
+                {{ tarea.titulo }}
+            </a>
+        </h5>
+        <!-- Fila Inferior con Asignado, Prioridad y Estado -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <!-- Usuario Asignado -->
+            <div>
+                {% if es_administrador %}
+                <span class="text-muted" style="font-size: 12px;">
+                    <i data-lucide="user" class="me-1" style="width: 14px; height: 14px;"></i>
+                    {{ tarea.asignada_a.username }}
+                </span>
+                {% endif %}
+            </div>
+            <!-- Estado y Prioridad -->
+            <div class="d-flex gap-2">
+                <!-- Prioridad -->
+                <span class="badge d-flex align-items-center gap-1 px-2.5 py-1" style="font-size: 11px; font-weight: 600; border-radius: 20px;
+                             {% if tarea.prioridad == 'alta' %}background-color: #ffdad6; color: #93000a;
+                             {% elif tarea.prioridad == 'media' %}background-color: #fcdeb5; color: #574425;
+                             {% else %}background-color: #f0edef; color: #45464d;{% endif %}">
+                    <i data-lucide="alert-circle" style="width: 12px; height: 12px;"></i>
+                    {{ tarea.get_prioridad_display }}
+                </span>
+                <!-- Estado -->
+                <span class="badge px-3 py-1" style="font-size: 11px; font-weight: 600; border-radius: 20px;
+                             {% if tarea.estado == 'terminada' %}background-color: #d1e7dd; color: #0f5132;
+                             {% elif tarea.estado == 'en_progreso' %}background-color: #fcdeb5; color: #98805d;
+                             {% else %}background-color: #e4e2e4; color: #45464d;{% endif %}">
+                    {{ tarea.get_estado_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-4 bg-white rounded shadow-sm">
+        <p class="text-muted mb-0">No tienes tareas asignadas.</p>
+    </div>
+    {% endfor %}
+</div>
+{% elif vista_actual == 'grilla' %}
+<!-- VISTA GRILLA (TARJETAS) -->
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for tarea in tareas %}
+    <div class="col">
+        <!-- Tarjeta individual (Estilo Unificado en Grilla) -->
+        <div class="card h-100 border-0 border-start border-4 bg-white shadow-sm p-3 position-relative transition-all"
+            style="border-left-color: {% if tarea.estado == 'terminada' %}#198754{% elif tarea.estado == 'en_progreso' %}#0d6efd{% else %}#6c757d{% endif %} !important; border-radius: 8px;">
+
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <!-- Categoría / Proyecto -->
+                <span class="badge text-uppercase tracking-wider px-2 py-1"
+                    style="font-size: 11px; background-color: #d8e2ff; color: #004395; font-weight: 600; border-radius: 4px;">
+                    {{ tarea.proyecto.nombre }}
+                </span>
+
+                <!-- Botones de Acción (Editar/Eliminar) -->
+                <div class="d-flex gap-1">
+                    {% if es_administrador or tarea.creado_por == request.user %}
+                    <a href="{% url 'editar_tarea' tarea.id %}" class="btn btn-sm btn-link text-muted p-0 me-2"
+                        title="Editar tarea">
+                        <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
+                    </a>
+                    <form action="{% url 'eliminar_tarea' tarea.id %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-link text-danger p-0 border-0 align-top"
+                            title="Mover a papelera">
+                            <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Título de la Tarea -->
+            <h5 class="mb-3 flex-grow-1">
+                <a href="{% url 'detalle_tarea' tarea.id %}" class="text-decoration-none text-dark fw-bold"
+                    style="font-size: 18px;">
+                    {{ tarea.titulo }}
+                </a>
+            </h5>
+
+            <!-- Fila Inferior con Asignado, Prioridad y Estado -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-auto pt-2">
+                <!-- Usuario Asignado -->
+                <div>
+                    {% if es_administrador %}
+                    <span class="text-muted" style="font-size: 12px;">
+                        <i data-lucide="user" class="me-1" style="width: 14px; height: 14px;"></i>
+                        {{ tarea.asignada_a.username }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Estado y Prioridad -->
+                <div class="d-flex gap-1 flex-wrap">
+                    <!-- Prioridad -->
+                    <span class="badge d-flex align-items-center gap-1 px-2.5 py-1" style="font-size: 11px; font-weight: 600; border-radius: 20px;
+                                 {% if tarea.prioridad == 'alta' %}background-color: #ffdad6; color: #93000a;
+                                 {% elif tarea.prioridad == 'media' %}background-color: #fcdeb5; color: #574425;
+                                 {% else %}background-color: #f0edef; color: #45464d;{% endif %}">
+                        {{ tarea.get_prioridad_display }}
+                    </span>
+
+                    <!-- Estado -->
+                    <span class="badge px-2.5 py-1" style="font-size: 11px; font-weight: 600; border-radius: 20px;
+                                 {% if tarea.estado == 'terminada' %}background-color: #d1e7dd; color: #0f5132;
+                                 {% elif tarea.estado == 'en_progreso' %}background-color: #fcdeb5; color: #98805d;
+                                 {% else %}background-color: #e4e2e4; color: #45464d;{% endif %}">
+                        {{ tarea.get_estado_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-4 bg-white rounded shadow-sm">
+        <p class="text-muted mb-0">No tienes tareas asignadas.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% elif vista_actual == 'kanban' %}
+<!-- VISTA KANBAN -->
+<div class="row g-3">
+    <!-- COLUMNA 1: PENDIENTES -->
+    <div class="col-md-4">
+        <div class="card bg-light border-0 shadow-sm h-100" style="border-radius: 12px;">
+            <div class="card-header bg-white border-bottom border-danger border-3 text-center fw-bold text-danger"
+                style="border-radius: 12px 12px 0 0;">
+                <i data-lucide="circle-dashed" class="me-1"></i> Pendientes
+            </div>
+            <div class="card-body p-2 d-flex flex-column gap-2" style="min-height: 50vh;">
+                {% for tarea in tareas %}
+                {% if tarea.estado == 'pendiente' %}
+                <!-- Tarjeta individual (Estilo Unificado en Kanban) -->
+                <div class="card border-0 border-start border-4 bg-white shadow-sm p-3 position-relative"
+                    style="border-left-color: #6c757d !important; border-radius: 8px;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge text-uppercase tracking-wider px-2 py-0.5"
+                            style="font-size: 10px; background-color: #d8e2ff; color: #004395; font-weight: 600; border-radius: 4px;">
+                            {{ tarea.proyecto.nombre }}
+                        </span>
+                        {% if es_administrador or tarea.creado_por == request.user %}
+                        <a href="{% url 'editar_tarea' tarea.id %}" class="btn btn-sm btn-link text-muted p-0"
+                            title="Editar tarea">
+                            <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    <h6 class="mb-2">
+                        <a href="{% url 'detalle_tarea' tarea.id %}" class="text-decoration-none text-dark fw-bold"
+                            style="font-size: 15px;">
+                            {{ tarea.titulo }}
+                        </a>
+                    </h6>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-1 pt-1">
+                        {% if es_administrador %}
+                        <span class="text-muted" style="font-size: 11px;">
+                            <i data-lucide="user" class="me-1" style="width: 12px; height: 12px;"></i>
+                            {{ tarea.asignada_a.username }}
+                        </span>
+                        {% endif %}
+                        <span class="badge" style="font-size: 10px; font-weight: 600; border-radius: 20px;
+                                                   {% if tarea.prioridad == 'alta' %}background-color: #ffdad6; color: #93000a;
+                                                   {% elif tarea.prioridad == 'media' %}background-color: #fcdeb5; color: #574425;
+                                                   {% else %}background-color: #f0edef; color: #45464d;{% endif %}">
+                            {{ tarea.get_prioridad_display }}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- COLUMNA 2: EN PROGRESO -->
+    <div class="col-md-4">
+        <div class="card bg-light border-0 shadow-sm h-100" style="border-radius: 12px;">
+            <div class="card-header bg-white border-bottom border-warning border-3 text-center fw-bold text-warning text-dark"
+                style="border-radius: 12px 12px 0 0;">
+                <i data-lucide="loader" class="me-1"></i> En Progreso
+            </div>
+            <div class="card-body p-2 d-flex flex-column gap-2" style="min-height: 50vh;">
+                {% for tarea in tareas %}
+                {% if tarea.estado == 'en_progreso' %}
+                <!-- Tarjeta individual (Estilo Unificado en Kanban) -->
+                <div class="card border-0 border-start border-4 bg-white shadow-sm p-3 position-relative"
+                    style="border-left-color: #0d6efd !important; border-radius: 8px;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge text-uppercase tracking-wider px-2 py-0.5"
+                            style="font-size: 10px; background-color: #d8e2ff; color: #004395; font-weight: 600; border-radius: 4px;">
+                            {{ tarea.proyecto.nombre }}
+                        </span>
+                        {% if es_administrador or tarea.creado_por == request.user %}
+                        <a href="{% url 'editar_tarea' tarea.id %}" class="btn btn-sm btn-link text-muted p-0"
+                            title="Editar tarea">
+                            <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    <h6 class="mb-2">
+                        <a href="{% url 'detalle_tarea' tarea.id %}" class="text-decoration-none text-dark fw-bold"
+                            style="font-size: 15px;">
+                            {{ tarea.titulo }}
+                        </a>
+                    </h6>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-1 pt-1">
+                        {% if es_administrador %}
+                        <span class="text-muted" style="font-size: 11px;">
+                            <i data-lucide="user" class="me-1" style="width: 12px; height: 12px;"></i>
+                            {{ tarea.asignada_a.username }}
+                        </span>
+                        {% endif %}
+                        <span class="badge" style="font-size: 10px; font-weight: 600; border-radius: 20px;
+                                                   {% if tarea.prioridad == 'alta' %}background-color: #ffdad6; color: #93000a;
+                                                   {% elif tarea.prioridad == 'media' %}background-color: #fcdeb5; color: #574425;
+                                                   {% else %}background-color: #f0edef; color: #45464d;{% endif %}">
+                            {{ tarea.get_prioridad_display }}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- COLUMNA 3: TERMINADAS -->
+    <div class="col-md-4">
+        <div class="card bg-light border-0 shadow-sm h-100" style="border-radius: 12px;">
+            <div class="card-header bg-white border-bottom border-success border-3 text-center fw-bold text-success"
+                style="border-radius: 12px 12px 0 0;">
+                <i data-lucide="check-circle-2" class="me-1"></i> Terminadas
+            </div>
+            <div class="card-body p-2 d-flex flex-column gap-2" style="min-height: 50vh;">
+                {% for tarea in tareas %}
+                {% if tarea.estado == 'terminada' %}
+                <!-- Tarjeta individual (Estilo Unificado en Kanban - Opacidad y Tachado) -->
+                <div class="card border-0 border-start border-4 bg-white shadow-sm p-3 position-relative opacity-75"
+                    style="border-left-color: #198754 !important; border-radius: 8px;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge text-uppercase tracking-wider px-2 py-0.5"
+                            style="font-size: 10px; background-color: #d1e7dd; color: #0f5132; font-weight: 600; border-radius: 4px;">
+                            {{ tarea.proyecto.nombre }}
+                        </span>
+                        {% if es_administrador or tarea.creado_por == request.user %}
+                        <a href="{% url 'editar_tarea' tarea.id %}" class="btn btn-sm btn-link text-muted p-0"
+                            title="Editar tarea">
+                            <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    <h6 class="mb-2">
+                        <a href="{% url 'detalle_tarea' tarea.id %}"
+                            class="text-decoration-none text-muted fw-bold text-decoration-line-through"
+                            style="font-size: 15px;">
+                            {{ tarea.titulo }}
+                        </a>
+                    </h6>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-1 pt-1">
+                        {% if es_administrador %}
+                        <span class="text-muted" style="font-size: 11px;">
+                            <i data-lucide="user" class="me-1" style="width: 12px; height: 12px;"></i>
+                            {{ tarea.asignada_a.username }}
+                        </span>
+                        {% endif %}
+                        <span class="badge"
+                            style="font-size: 10px; font-weight: 600; border-radius: 20px; background-color: #f0edef; color: #45464d;">
+                            {{ tarea.get_prioridad_display }}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endif %}
+{% endblock %}
